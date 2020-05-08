@@ -1,0 +1,183 @@
+
+========= In command promt ==========
+mkdir django 
+
+cd django/
+
+sudo apt-get install python3.6-venv
+
+virtualenv venv -p python3
+
+source ./venv/bin/activate
+
+pip3 install django
+
+pip3 install djangorestframework
+
+django-admin startproject djangocrud
+
+cd djangocrud/
+
+django-admin startapp api
+
+============================================
+
+Now open VS code and in that open terminal
+
+source ./venv/bin/activate
+
+python3 manage.py migrate
+
+python3 manage.py createsuperuser
+
+python3 manage.py runserver
+
+=======create api/serializers.py=========
+
+from django.contrib.auth.models import User, Group
+from rest_framework import serializers
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ['url', 'username', 'email', 'groups']
+
+================
+
+========== api/views.py==========
+from django.contrib.auth.models import User, Group
+from rest_framework import viewsets
+from api.serializers import UserSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+
+# Create your views here.
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+=================
+====== replace djangocrud/urls.py========
+from django.contrib import admin
+from django.urls import path
+from django.conf.urls import url, include
+from rest_framework import routers
+from api import views
+
+router = routers.DefaultRouter()
+router.register(r'users', views.UserViewSet)
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    url(r'^', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+]
+===========
+
+In browser paste this url "http://127.0.0.1:8000/admin/"
+
+======================= models.py ==========
+from django.db import models
+
+# Create your models here.
+class Movie(models.Model):
+    title = models.CharField(max_length=32)
+    desc = models.CharField(max_length=256)
+    year = models.IntegerField()
+=============
+========= serializers.py ==========
+
+#add this
+class MovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Movie
+        fields = ['title', 'desc', 'year']
+============= views.py =========
+#add this
+from api.serializers import UserSerializer, MovieSerializer
+from .models import Movie
+class MovieViewSet(viewsets.ModelViewSet):
+
+# Create your views here.
+    queryset = Movie.objects.all()
+    serializer_class = MovieSerializer
+
+Note: You will get one error in "Movie.objects.all()" 
+
+ Press ctr+sft+P to open the the Command Palette. Now in command palette type Preferences: Configure Language Specific Settings. Now select Python. Here in right side paste this code
+
+ "python.linting.pylintArgs": [
+        "--load-plugins=pylint_django",
+	"--errors-only"
+   ]
+
+============ admin.py ======
+from django.contrib import admin
+from .models import Movie
+# Register your models here.
+admin.site.register(Movie)
+=========== settings.py ========
+inside INSTALLED_APPS array add this
+'api'
+====== urls.py ==========
+#add this
+router.register(r'movies', views.MovieViewSet)
+==============
+
+In VS code terminal stop the server and paste this commands
+
+$ python3 manage.py makemigrations
+
+Output : Migrations for 'api':
+  	 api/migrations/0001_initial.py
+    	  - Create model Movie
+
+$ python3 manage.py migrate
+
+$ python3 manage.py runserver
+
+===
+Now open browser and paste this url "http://127.0.0.1:8000/admin/". You will see Movies
+
+======= Angular steps =======
+
+==========================
+
+========= CORS Headers =====
+
+$ pip3 install django-cors-headers  
+
+=========== settings.py ========
+inside INSTALLED_APPS array add this
+'corsheaders',
+
+inside MIDDLEWARE array add this
+'corsheaders.middleware.CorsMiddleware',
+'django.middleware.common.CommonMiddleware',
+
+#add this
+CORS_ORGIN_WHITELIST = [
+    'http://localhost:4200'
+]
+
+Note: If cors origin error comes paste this code 
+	CORS_ORIGIN_ALLOW_ALL = True
+
+Reference : https://github.com/ottoyiu/django-cors-headers#cors_origin_allow_all
+============
+
+
+Reference : https://www.youtube.com/watch?v=z_H-oxQVsPw  ( Part 1 )
+	    https://www.youtube.com/watch?v=kXxmhFk6STc  ( Part 2 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
